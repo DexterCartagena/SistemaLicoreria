@@ -1,0 +1,142 @@
+-------------------Tabla compra seagrego el dato: fecha date
+
+-------------------------------Vistas
+CREATE VIEW VistProveedores
+as
+Select cod as COD, detalle as DETALLE, nit as NIT, telefono as TELEFONO FROM PROVEEDOR
+-----------------------------------------------------------------------
+CREATE VIEW VistProductos
+AS
+SELECT cod as COD, detalle AS DETALLE, cantidad as ML,precio_h as 'PREC. HIST', precio_c  AS 'PREC. COSTO',precio_v as 'PREC VENTA' FROM PRODUCTO
+-----------------------------------------------------------------------
+CREATE VIEW VistCompra
+as
+select cod as COD, fecha as FECHA, (select detalle from PROVEEDOR where cod=fk_proveedor) as PROVEEDOR, (select nombre from USUARIO where cod=fk_usuario)as USUARIO,nit as NIT,total as TOTAL from COMPRA
+----------------------------------------------------------------------
+ALTER VIEW VistDetalleCompraFiltrado
+as
+select cod as COD,fk_compra as COD_COMPRA, fk_producto as 'COD PRODUCTO', articulo as PRODUCTO, cant AS CANT, precio_uni as Precio, total as TOTAL from DETALLE_COMPRA
+-------------------------------Procesos almacenados
+
+CREATE PROCEDURE PR_COMRPA
+@codUser int,
+@codProv int,
+@nitProv int,
+@total money
+as
+insert into COMPRA values (@codProv,@codUser,@nitProv,@total)
+
+----------------------------------------------------------------------
+
+alter PROCEDURE PR_DETALLECOMRPRA
+@codproducto int,
+@detallePr varchar(150),
+@cant int,
+@precioUni money,
+@total money,
+as
+declare @codcompra int
+declare @estaActu int
+begin
+set @codcompra=(select MAX(cod) from COMPRA)
+set @estaActu=0
+if (@codproducto=0) 
+begin
+
+insert into PRODUCTO (detalle,precio_c,precio_h) values (@detallePr,@precioUni,@precioUni)
+set @codproducto= (select MAX(cod) from PRODUCTO)
+insert into STOCK (fk_producto,cantidad) values (@codproducto,@cant)
+set @estaActu=1
+end
+
+if not exists(select * from STOCK where fk_producto=@codproducto)
+begin
+insert into STOCK (fk_producto,cantidad,cantidad_min)values(@codproducto,@cant,5)
+end
+
+insert into DETALLE_COMPRA values (@codcompra,@codproducto,@detallePr,@cant,@precioUni,@total)
+
+if((select precio_h from PRODUCTO where cod=@codproducto)< @precioUni)
+begin
+update PRODUCTO set precio_h=@precioUni, precio_c=@precioUni where cod=@codproducto
+end
+else update PRODUCTO set precio_c=@precioUni where cod=@codproducto
+
+if(@estaActu=0)
+begin
+update STOCK set cantidad=cantidad+@cant where fk_producto=@codproducto
+end
+end
+------------------------------------------------------------------------------------------
+ALTER PROCEDURE ModifCompra
+@cod int,
+@codProveedor int,
+@codUser int,
+@nit int,
+@total money
+AS
+BEGIN
+declare @tempTabla table (cod int,fk_com int,fk_pro int,articulo nvarchar(50),cant int,precio money,total money)
+declare @contTabla int;
+declare @iter int =0;
+declare @retroCant int;
+
+insert into @tempTabla  select cod,fk_compra,fk_producto,articulo,cant,precio_uni,total from DETALLE_COMPRA where fk_compra=@cod
+set @contTabla= (select COUNT(*) from @tempTabla)
+
+update COMPRA set fk_proveedor=@codProveedor,fk_usuario=@codUser,nit=@nit,total=@total where cod=@cod
+
+
+while(@iter<@contTabla)
+BEGIN
+set @retroCant=(select top(1) cant from @tempTabla)
+update STOCK set cantidad=cantidad+@retroCant where cod=(select top(1) cod from @tempTabla)
+delete from @tempTabla where cod=(select top(1) cod from @tempTabla)
+
+set @iter= @iter+1;
+END
+
+delete from DETALLE_COMPRA where fk_compra=@cod
+
+END
+------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE ModifDetalleCompra
+@codcompra int,
+@codproducto int,
+@producto nvarchar(50),
+@cant int,
+@precio money,
+@total money
+AS
+
+declare @estaActu int
+begin
+
+set @estaActu=0
+if (@codproducto=0) 
+begin
+
+insert into PRODUCTO (detalle,precio_c,precio_h) values (@producto,@precio,@precio)
+set @codproducto= (select MAX(cod) from PRODUCTO)
+insert into STOCK (fk_producto,cantidad) values (@codproducto,@cant)
+set @estaActu=1
+end
+
+if not exists(select * from STOCK where fk_producto=@codproducto)
+begin
+insert into STOCK (fk_producto,cantidad,cantidad_min)values(@codproducto,@cant,5)
+end
+
+insert into DETALLE_COMPRA values (@codcompra,@codproducto,@producto,@cant,@precio,@total)
+
+if((select precio_h from PRODUCTO where cod=@codproducto)< @precio)
+begin
+update PRODUCTO set precio_h=@precio, precio_c=@precio where cod=@codproducto
+end
+else update PRODUCTO set precio_c=@precio where cod=@codproducto
+
+if(@estaActu=0)
+begin
+update STOCK set cantidad=cantidad+@cant where fk_producto=@codproducto
+end
+end

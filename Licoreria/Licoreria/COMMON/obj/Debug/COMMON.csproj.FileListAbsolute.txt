@@ -1,0 +1,8 @@
+C:\Users\Orlando\Desktop\SistemasDesarrollo\Licoreria\COMMON\bin\Debug\COMMON.dll
+C:\Users\Orlando\Desktop\SistemasDesarrollo\Licoreria\COMMON\bin\Debug\COMMON.pdb
+C:\Users\Orlando\Desktop\SistemasDesarrollo\Licoreria\COMMON\obj\Debug\COMMON.csproj.AssemblyReference.cache
+C:\Users\Orlando\Desktop\SistemasDesarrollo\Licoreria\COMMON\obj\Debug\COMMON.csproj.CoreCompileInputs.cache
+C:\Users\Orlando\Desktop\SistemasDesarrollo\Licoreria\COMMON\obj\Debug\COMMON.dll
+C:\Users\Orlando\Desktop\SistemasDesarrollo\Licoreria\COMMON\obj\Debug\COMMON.pdb
+C:\Users\Orlando\Desktop\SistemasDesarrollo\Licoreria\COMMON\bin\Debug\FontAwesome.Sharp.dll
+C:\Users\Orlando\Desktop\SistemasDesarrollo\Licoreria\COMMON\obj\Debug\COMMON.csproj.CopyComplete
